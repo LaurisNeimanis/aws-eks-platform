@@ -1,0 +1,95 @@
+flowchart TD
+
+    %% ======================================================================
+    %% CI/CD LAYER
+    %% ======================================================================
+    subgraph CI_CD["GitHub CI/CD"]
+        GH_Actions["GitHub Actions<br/>Terraform + Build + Deploy Pipelines"]
+        GHCR["GHCR<br/>(Container Registry)"]
+    end
+
+
+    %% ======================================================================
+    %% AWS LAYER
+    %% ======================================================================
+    subgraph AWS["AWS Cloud"]
+        
+        %% ------------------- NETWORKING -------------------
+        subgraph Networking["VPC Networking"]
+            IGW["Internet Gateway"]
+            NAT["NAT Gateway"]
+            PUB1["Public Subnet A"]
+            PUB2["Public Subnet B"]
+            PRIV1["Private Subnet A"]
+            PRIV2["Private Subnet B"]
+        end
+
+        %% ------------------- EKS CORE -------------------
+        subgraph EKS_Cluster["EKS Cluster"]
+            EKS_API["EKS Control Plane"]
+            NG1["Managed Node Group A"]
+            NG2["Managed Node Group B"]
+        end
+
+        %% ------------------- INGRESS LAYER -------------------
+        subgraph Ingress["Ingress Layer"]
+            NLB["AWS NLB<br/>(Layer 4)"]
+            Traefik["Traefik Ingress Controller<br/>(HTTPS + ACME)"]
+        end
+
+        %% ------------------- WORKLOADS -------------------
+        subgraph Workloads["Kubernetes Workloads"]
+            AppPods["Application Pods"]
+            K8sService["ClusterIP Service"]
+        end
+
+        %% ------------------- OPTIONAL OBSERVABILITY -------------------
+        subgraph Observability["Observability Components (Optional)"]
+            Metrics["Metrics Server"]
+            Promo["Prometheus"]
+            Grafana["Grafana"]
+        end
+
+    end
+
+
+    %% ======================================================================
+    %% FLOW CONNECTIONS — CI/CD
+    %% ======================================================================
+    GH_Actions -->|Build & Push Images| GHCR
+    GH_Actions -->|Terraform Plan/Apply| AWS
+    GHCR -->|Pull Container Image| AppPods
+
+
+    %% ======================================================================
+    %% FLOW CONNECTIONS — NETWORK
+    %% ======================================================================
+    IGW --> PUB1
+    IGW --> PUB2
+
+    NAT --> PRIV1
+    NAT --> PRIV2
+
+    PRIV1 --> NG1
+    PRIV2 --> NG2
+
+    NG1 --> EKS_API
+    NG2 --> EKS_API
+
+
+    %% ======================================================================
+    %% FLOW CONNECTIONS — INGRESS
+    %% ======================================================================
+    PUB1 --> NLB
+    PUB2 --> NLB
+
+    NLB --> Traefik
+    Traefik --> K8sService
+    K8sService --> AppPods
+
+
+    %% ======================================================================
+    %% OBSERVABILITY PATH
+    %% ======================================================================
+    AppPods --> Promo
+    Promo --> Grafana

@@ -1,0 +1,88 @@
+# ---------------------------------------------------
+# TRAEFIK IMAGE VERSION (production best practice)
+# ---------------------------------------------------
+image:
+  tag: v3.6.2
+  pullPolicy: IfNotPresent
+
+# ---------------------------------------------------
+# ENTRYPOINTS — HTTP + HTTPS with enforced redirect
+# ---------------------------------------------------
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+
+  websecure:
+    address: ":443"
+
+# ---------------------------------------------------
+# AWS Load Balancer — NLB (simple L4 passthrough)
+# ---------------------------------------------------
+service:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    # NLB — the classic L4 Network Load Balancer
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    # Public NLB with public IP addresses
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+  spec:
+    externalTrafficPolicy: Cluster
+
+# ---------------------------------------------------
+# IngressClass
+# ---------------------------------------------------
+ingressClass:
+  enabled: true
+  isDefaultClass: true
+  name: traefik
+
+# ---------------------------------------------------
+# Providers
+# ---------------------------------------------------
+providers:
+  kubernetesIngress:
+    enabled: true
+    publishedService:
+      enabled: true
+
+  kubernetesCRD:
+    enabled: true
+
+  kubernetesGateway:
+    enabled: false
+
+# ---------------------------------------------------
+# ACME (Let's Encrypt) — HTTP-01 challenge via NLB:80
+# ---------------------------------------------------
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "neimanis.lauris@gmail.com"
+      storage: "/data/acme.json"
+      httpChallenge:
+        entryPoint: web
+
+# DEMO: certificates are not persisted and will be lost after pod restart
+persistence:
+  enabled: false
+
+# ---------------------------------------------------
+# Logging
+# ---------------------------------------------------
+logs:
+  general:
+    level: INFO
+
+  access:
+    enabled: true
+
+metrics:
+  prometheus:
+    enabled: true
