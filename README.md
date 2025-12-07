@@ -238,6 +238,12 @@ kubectl logs -n ccore-ai-demo -l app=ccore-ai-demo
 
 ---
 
-# 11. License
+# 11. Why This Repository Matters
+
+This repository showcases a real-world AWS EKS platform built with Terraform, Kubernetes and Traefik, including secure networking, private node subnets, NLB-based ingress, and end-to-end routing validation. It demonstrates the practical skill set required for modern Infrastructure, SRE and Platform Engineering roles: cloud-native architecture design, production-aligned IaC, and verifiable, working infrastructure rather than theoretical examples.
+
+---
+
+# 12. License
 
 MIT
