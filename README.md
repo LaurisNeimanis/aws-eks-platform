@@ -131,7 +131,10 @@ helm repo update
 
 kubectl create namespace traefik
 
-helm upgrade --install traefik traefik/traefik   --namespace traefik   --version 37.4.0   --values k8s/base/traefik/values.yaml
+helm install traefik traefik/traefik \
+  --namespace traefik \
+  --version 37.4.0 \
+  --values k8s/base/traefik/values.yaml
 ```
 
 ## Application – ccore-ai-demo
