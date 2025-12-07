@@ -1,0 +1,76 @@
+# ===========================================
+# Python (utility scripts, optional)
+# ===========================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.venv/
+
+# ===========================================
+# Kubernetes / Helm
+# ===========================================
+*.tgz                     # Helm chart packages
+charts/*                  # Helm dependency charts
+values.override.yaml      # Local override values
+tmp/
+local/
+
+# ===========================================
+# ArgoCD / GitOps
+# ===========================================
+.argocd/
+argo-temp/
+*.backup
+
+# ===========================================
+# Terraform (if EKS is added later)
+# ===========================================
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+*.tfvars
+*.tfvars.json
+eks-traefik-deploy.md
+
+# ===========================================
+# Editors / IDEs
+# ===========================================
+.vscode/
+.idea/
+*.swp
+
+# ===========================================
+# Certificates / Secrets
+# ===========================================
+*.crt
+*.key
+*.pem
+*.csr
+*.enc
+secrets/
+secret/
+*.password
+*.env
+.env.*
+
+# ===========================================
+# Logs
+# ===========================================
+*.log
+logs/
+debug.log
+
+# ===========================================
+# OS / System files
+# ===========================================
+.DS_Store
+Thumbs.db
+
+# ===========================================
+# Docker
+# ===========================================
+*.tar
+**/.docker
