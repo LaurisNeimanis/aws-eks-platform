@@ -1,4 +1,4 @@
-# AWS EKS Platform — Terraform + Kubernetes (Traefik) Architecture
+# AWS EKS Platform — Terraform + Kubernetes (Traefik) Platform Architecture
 
 This repository contains a **production-aligned AWS EKS platform**, designed to demonstrate strong Infrastructure Engineering, SRE and Cloud Architecture capabilities.
 
@@ -57,7 +57,7 @@ flowchart TD
 
 Full low-level version (modules + cloud-init + Ansible roles + containers):
 
-**Full architecture diagram:** `diagrams/architecture.mmd`
+[Full architecture diagram](diagrams/architecture.mmd)
 
 ---
 
@@ -197,7 +197,39 @@ kubectl logs -n ccore-ai-demo -l app=ccore-ai-demo
 
 ---
 
-# 9. Roadmap
+# 9. Verification — End-to-End Proof
+
+## 9.1 Browser — demo.ccore.ai
+
+![Demo Application](docs/screenshots/demo-ccore-ai.png)
+
+---
+
+## 9.2 AWS Target Group — healthy nodes
+
+![Target Group Healthy](docs/screenshots/target-group-healthy.png)
+
+---
+
+## 9.3 Traefik Service (Kubernetes)
+
+![Traefik Service](docs/screenshots/traefik-service.png)
+
+---
+
+## 9.4 Ingress rule (Host-based routing)
+
+![Ingress Demo](docs/screenshots/ingress-demo.png)
+
+---
+
+## 9.5 CLI validation (curl with Host header)
+
+![curl 200](docs/screenshots/curl-200.png)
+
+---
+
+# 10. Roadmap
 
 - Prometheus + Grafana bundle  
 - ExternalDNS  
@@ -206,6 +238,6 @@ kubectl logs -n ccore-ai-demo -l app=ccore-ai-demo
 
 ---
 
-# 10. License
+# 11. License
 
 MIT
