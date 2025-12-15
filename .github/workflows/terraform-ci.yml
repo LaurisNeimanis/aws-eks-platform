@@ -38,10 +38,12 @@ jobs:
         run: tflint --init && tflint
         working-directory: terraform
 
-      - name: Run tfsec (repo-wide)
-        uses: aquasecurity/tfsec-action@v1.0.3
-        with:
-          working_directory: "./terraform"
+      - name: Run tfsec (custom, with config)
+        run: |
+          curl -sLo tfsec https://github.com/aquasecurity/tfsec/releases/download/v1.28.14/tfsec-linux-amd64
+          chmod +x tfsec
+          sudo mv tfsec /usr/local/bin/tfsec
+          tfsec ./terraform --config-file .tfsec.yaml
 
       - name: Terraform Validate
         working-directory: terraform/envs/dev
