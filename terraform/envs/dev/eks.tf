@@ -42,6 +42,24 @@ module "eks" {
     }
   }
 
+  # Create a dedicated KMS key (managed inside the module)
+  create_kms_key = true
+
+  # Enable encryption of Kubernetes Secrets at rest
+  # (EKS control plane encryption using AWS KMS)
+  encryption_config = {
+    resources = ["secrets"]
+  }
+
+  # Enable EKS control plane logging for auditability and troubleshooting
+  enabled_log_types = [
+    "api",                 # Kubernetes API server requests
+    "audit",               # Audit logs for security and compliance
+    "authenticator",       # Authentication-related logs
+    "controllerManager",   # Controller manager logs
+    "scheduler",           # Scheduler decision logs
+  ]
+
   # Managed node group (single group for demo)
   eks_managed_node_groups = {
     system = {
@@ -53,6 +71,13 @@ module "eks" {
       desired_size = var.node_desired_size
 
       disk_size = var.node_disk_size
+
+      metadata_options = {
+        http_endpoint               = "enabled"
+        http_tokens                 = "required"
+        http_put_response_hop_limit = 2
+        instance_metadata_tags      = "disabled"
+      }
     }
   }
 
