@@ -53,11 +53,11 @@ module "eks" {
 
   # Enable EKS control plane logging for auditability and troubleshooting
   enabled_log_types = [
-    "api",                 # Kubernetes API server requests
-    "audit",               # Audit logs for security and compliance
-    "authenticator",       # Authentication-related logs
-    "controllerManager",   # Controller manager logs
-    "scheduler",           # Scheduler decision logs
+    "api",               # Kubernetes API server requests
+    "audit",             # Audit logs for security and compliance
+    "authenticator",     # Authentication-related logs
+    "controllerManager", # Controller manager logs
+    "scheduler",         # Scheduler decision logs
   ]
 
   # Managed node group (single group for demo)
