@@ -1,249 +1,232 @@
-# AWS EKS Platform — Terraform + Kubernetes (Traefik) Platform Architecture
+# AWS EKS Terraform Platform — Infrastructure Foundation
 
-This repository contains a **production-aligned AWS EKS platform**, designed to demonstrate strong Infrastructure Engineering, SRE and Cloud Architecture capabilities.
+**Production-aligned · API-Only Authentication · Cloudflare-Integrated · GitOps-Ready**
 
-The stack includes:
+This repository implements a **production-aligned AWS infrastructure foundation** for running Kubernetes workloads on **Amazon EKS**, provisioned entirely via **Terraform**.
 
-- **Terraform IaC** (AWS VPC + EKS cluster using official modules)
-- **Kubernetes ingress layer using Traefik (NLB-based)**
-- **Application onboarding using Kustomize**
-- **Modular directory structure matching real-world platform engineering standards**
-- **Verifiable end-to-end routing: NLB → Traefik → Service → Pod**
+It provides a **clean, explicit, and auditable infrastructure layer** designed to be consumed by a **separate GitOps / workload lifecycle repository**, mirroring how modern platform teams split responsibilities in real production environments.
+
+This repository is the **authoritative source of truth for AWS infrastructure**.
 
 ---
 
-# 1. Platform Overview
+## Purpose & Scope
 
-The platform is composed of two major layers:
+The goal of this repository is to deliver a **stable, minimal, and extensible EKS foundation**, not a demo cluster.
 
-## Terraform Layer (`terraform/`)
-Responsible for provisioning AWS infrastructure:
+It focuses on:
 
-- **VPC** (public + private subnets, NAT, routing)
-- **EKS Cluster** (terraform-aws-modules/eks v21)
-- **Managed Node Groups** (AL2023)
-- **IAM roles + IRSA**
-- **Security Group rule enhancements for NLB → NodePort**
+- Correct AWS primitives
+- Explicit authentication and access model
+- Deterministic networking and security boundaries
+- Automation-first certificate and DNS handling
+- Clear dev → prod evolution path
 
-## Kubernetes Layer (`k8s/`)
-Defines cluster workloads:
-
-- **Traefik Ingress Controller (Helm)**
-- **Demo application (Deployment + Service + Ingress)**
-- **Kustomize-based environment structure**
-
-The platform is directly usable as a **demo**, **training environment**, or **foundation for more advanced production features**.
+Everything **above the cluster** (platform services, workloads, GitOps logic) is intentionally **out of scope**.
 
 ---
 
-# 2. Architecture Diagram
+## Architectural Principles
+
+The infrastructure design prioritizes:
+
+- Explicit ownership of infrastructure lifecycle
+- IAM-native, API-only Kubernetes authentication
+- Minimal moving parts at the infrastructure layer
+- Separation of infrastructure and cluster lifecycle concerns
+- Cost-aware defaults without compromising production parity
+
+The result is an infrastructure layer that is **boring, predictable, and safe** — by design.
+
+---
+
+## Terraform Backend Bootstrap
+
+This infrastructure uses a **pre-bootstrapped, shared Terraform backend** based on **S3 + DynamoDB**, created and managed via a **dedicated bootstrap repository**.
+
+**Terraform backend bootstrap (authoritative):**  
+https://github.com/LaurisNeimanis/aws-tf-backend-bootstrap
+
+That repository is responsible for **one-time creation** of:
+
+- A globally unique S3 bucket for Terraform state
+- A DynamoDB table for state locking
+- Versioning, encryption, and public access blocking
+
+After the bootstrap step is completed once, **all Terraform environments** (global, dev, prod) automatically use this backend.
+
+This repository **does not create or modify backend infrastructure** — it only consumes it.
+
+---
+
+## Core Technologies (Actual Implementation)
+
+- **AWS VPC** — `terraform-aws-modules/vpc` v6  
+- **Amazon EKS** — `terraform-aws-modules/eks` v21  
+- **EKS Managed Node Groups** (Amazon Linux 2023)  
+- **EKS Access API** (API-only authentication mode)  
+- **AWS ACM** — DNS-validated certificates  
+- **Cloudflare DNS** — automated ACM validation records  
+- **S3 Gateway VPC Endpoint**  
+- **S3 + DynamoDB** remote Terraform backend (bootstrapped externally)  
+- **Cost-optimized NAT** (single NAT for dev environments)
+
+No legacy components. No implicit defaults.
+
+---
+
+## Responsibility Split
+
+### In scope
+
+- AWS VPC and subnet topology
+- Internet Gateway, NAT, and routing
+- EKS control plane
+- Managed node groups
+- IAM roles and access model
+- ACM certificates
+- Cloudflare DNS automation
+- Terraform state consumption and locking
+
+### Out of scope
+
+- Terraform backend creation (S3, DynamoDB)
+- Kubernetes workloads
+- GitOps tooling (ArgoCD, ApplicationSets)
+- Ingress controllers
+- DNS routing for applications
+- CI/CD pipelines
+- Runtime secrets
+
+Related repositories:
+
+- **Terraform backend bootstrap:** https://github.com/LaurisNeimanis/aws-tf-backend-bootstrap  
+- **GitOps layer:** https://github.com/LaurisNeimanis/aws-eks-gitops
+
+---
+
+## Repository Structure
+
+```text
+terraform/
+└── envs/
+    └── dev/
+        ├── backend.tf
+        ├── versions.tf
+        ├── providers.tf
+        ├── variables.tf
+        ├── terraform.tfvars.example
+        ├── locals.tf
+        ├── vpc.tf
+        ├── vpc-endpoints.tf
+        ├── eks.tf
+        ├── acm.tf
+        ├── acm-dns-cloudflare.tf
+        ├── acm-validation.tf
+        └── outputs.tf
+```
+
+Each environment is **fully self-contained**, but relies on the **shared, pre-created Terraform backend**.
+
+---
+
+## Architecture Overview
 
 ```mermaid
-flowchart TD
-    A[Terraform] --> B[VPC]
-    A --> C[EKS Cluster]
-    C --> D[Managed Node Group]
+flowchart TB
+  Operator["Operator / CI<br/>(Terraform)"]
 
-    subgraph AWS Load Balancer
-      LB[NLB]
-    end
+  subgraph AWS["AWS Account"]
+    VPC["VPC"]
 
-    LB --> T[Traefik Ingress Controller]
-    T --> S[Application Service]
-    S --> P[Application Deployment]
+    EKS["Amazon EKS<br/>Control Plane"]
+    Nodes["EKS Managed Node Groups"]
+    ACM["AWS ACM"]
 
-    User --> LB
+    VPC --> EKS
+    VPC --> Nodes
+  end
+
+  CF["Cloudflare DNS"]
+  TFSTATE["Terraform Backend<br/>(S3 + DynamoDB)"]
+
+  Operator --> TFSTATE
+  Operator --> EKS
+  ACM --> CF
 ```
 
-Full low-level version (modules + cloud-init + Ansible roles + containers):
-
-[Full architecture diagram](diagrams/architecture.mmd)
+> This is a high-level platform overview.  
+>  
+> A detailed infrastructure and networking diagram is available here:  
+> **diagrams/architecture.mmd**
+**[diagrams/architecture.mmd](diagrams/architecture.mmd)**
 
 ---
 
-# 3. Repository Structure
+## Terraform Workflow
 
-```
-aws-eks-platform/
-├── terraform/                     # AWS IaC (VPC, EKS, Node Groups)
-│   └── envs/                      # Environment-specific configs (dev, prod, etc.)
-│
-├── k8s/                           # Kubernetes manifests and component definitions
-│   └── base/
-│       ├── traefik/               # Ingress Controller (Helm values + configs)
-│       └── ccore-ai-demo/         # Demo application resources
-│
-├── diagrams/                      # Mermaid architecture diagrams
-│
-├── .github/workflows/             # GitHub Actions CI/CD pipelines'
-└── README.md                      # Kubernetes overview
-```
-
----
-
-# 4. Terraform Architecture
-
-## Modules Used
-- **terraform-aws-modules/vpc v6**
-- **terraform-aws-modules/eks v21**
-- **Additional custom SG rules** for NLB → NodePort connectivity
-
-## Key Features
-- Private subnets for nodes  
-- Public subnets with correct LB tags  
-- IAM access entries for cluster admins  
-- IRSA enabled for workload identity  
-- Security groups left unmodified where AWS recommends
-
-## Deployment Workflow
-
-```
+```bash
 cd terraform/envs/dev
 terraform init
+terraform plan
 terraform apply
 ```
 
-Retrieve kubeconfig:
-
-```
-aws eks update-kubeconfig --name <cluster-name>
-kubectl get nodes
-```
+The backend is **already provisioned** and referenced in `backend.tf`.
 
 ---
 
-# 5. Kubernetes Layer
+## Terraform CI (Quality Gates)
 
-## Ingress Layer – Traefik
+This repository includes a **GitHub Actions–based Terraform CI pipeline** that enforces
+**formatting, linting, security scanning, and validation** on all Terraform changes.
 
-Traefik is deployed via Helm with:
+The CI pipeline is intentionally **non-deploying**.
 
-- **AWS NLB** (`service.beta.kubernetes.io/aws-load-balancer-type: nlb`)
-- **HTTPS enforcement**
-- **ACME/Let's Encrypt support**
-- **IngressClass definition**
+It exists solely to ensure that:
 
-Deployment:
+- Terraform code remains syntactically valid
+- Formatting is consistent and deterministic
+- Common misconfigurations are caught early
+- Security issues are flagged before merge
+- Infrastructure definitions stay reviewable and safe
 
-```
-helm repo add traefik https://traefik.github.io/charts
-helm repo update
+### What the CI does
 
-kubectl create namespace traefik
+On every pull request and on pushes to `main` (Terraform paths only), the pipeline runs:
 
-helm install traefik traefik/traefik \
-  --namespace traefik \
-  --version 37.4.0 \
-  --values k8s/base/traefik/values.yaml
-```
+- `terraform fmt -check` (repo-wide)
+- `terraform init` (without backend, CI-safe)
+- `terraform validate`
+- `tflint` (static analysis)
+- `tfsec` (security scanning)
 
-## Application – ccore-ai-demo
+A minimal `terraform.tfvars` is provisioned automatically in CI using
+`terraform.tfvars.example` to allow validation without secrets.
 
-Includes:
+### What the CI does NOT do
 
-- `Deployment`
-- `Service (ClusterIP)`
-- `Ingress` routed through Traefik
-- Namespace isolation
-- Delivered via Kustomize
+- No `terraform plan`
+- No `terraform apply`
+- No backend access
+- No environment mutation
 
-Deployment:
+All infrastructure changes are still applied **manually or via controlled pipelines**
+outside of this repository.
 
-```
-kubectl apply -k k8s/base/ccore-ai-demo
-```
-
----
-
-# 6. Full Routing Path
-
-The platform provides a complete, verifiable network path:
-
-```
-Client → AWS NLB → Traefik → Ingress Rule → Service → Pod
-```
-
-Validate routing:
-
-```
-curl -k -H "Host: demo.ccore.ai" https://<NLB-DNS>
-kubectl logs -n traefik -l app.kubernetes.io/name=traefik
-kubectl logs -n ccore-ai-demo -l app=ccore-ai-demo
-```
+This keeps the infrastructure layer **safe, auditable, and review-driven**.
 
 ---
 
-# 7. Security Model
+## Design Summary
 
-- Nodes run in **private subnets**
-- Traefik exposed via **public NLB**
-- Node SG extended for NLB → NodePort
-- IRSA enabled for workload identity
-- Default SG left unmanaged (AWS EKS requirement)
-- HTTPS via ACME certificates
-- No workloads have public IPs
+This repository provides a **clean, production-aligned EKS infrastructure foundation** with:
 
----
+- IAM-native, API-only authentication
+- Explicit networking and security boundaries
+- Fully automated ACM + Cloudflare integration
+- Shared, pre-bootstrapped Terraform backend
+- Deterministic Terraform workflows
+- Clear separation from GitOps and workload concerns
 
-# 8. Observability & Extensibility
-
-| Feature | Status |
-|--------|--------|
-| Metrics server | Standard in EKS |
-| Prometheus/Grafana | Optional, easy integration |
-| External DNS | Optional |
-| HPA / Autoscaling | Supported |
-| Logging stack | Can be added (Loki / ELK) |
-
----
-
-# 9. Verification — End-to-End Proof
-
-## 9.1 Browser — demo.ccore.ai
-
-![Demo Application](docs/screenshots/demo-ccore-ai.png)
-
----
-
-## 9.2 AWS Target Group — healthy nodes
-
-![Target Group Healthy](docs/screenshots/target-group-healthy.png)
-
----
-
-## 9.3 Traefik Service (Kubernetes)
-
-![Traefik Service](docs/screenshots/traefik-service.png)
-
----
-
-## 9.4 Ingress rule (Host-based routing)
-
-![Ingress Demo](docs/screenshots/ingress-demo.png)
-
----
-
-## 9.5 CLI validation (curl with Host header)
-
-![curl 200](docs/screenshots/curl-200.png)
-
----
-
-# 10. Roadmap
-
-- Prometheus + Grafana bundle  
-- ExternalDNS  
-- HPA autoscaling examples  
-- Service Mesh (Linkerd / Istio)  
-
----
-
-# 11. Why This Repository Matters
-
-This repository showcases a real-world AWS EKS platform built with Terraform, Kubernetes and Traefik, including secure networking, private node subnets, NLB-based ingress, and end-to-end routing validation. It demonstrates the practical skill set required for modern Infrastructure, SRE and Platform Engineering roles: cloud-native architecture design, production-aligned IaC, and verifiable, working infrastructure rather than theoretical examples.
-
----
-
-# 12. License
-
-MIT
+It is intentionally designed to be **boring infrastructure** — so higher layers can evolve safely.
