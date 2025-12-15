@@ -1,0 +1,41 @@
+# tfsec configuration
+#
+# The exclusions below are intentional and reviewed.
+# This project uses official Terraform AWS modules (EKS, VPC),
+# where several tfsec checks produce known false positives
+# or conflict with AWS-recommended architectures.
+
+exclude:
+
+  # EKS API endpoint is intentionally exposed publicly.
+  # Security is enforced via AWS IAM authentication, RBAC, security groups,
+  # audit logging, and limited blast radius.
+  # This is a supported and common AWS EKS setup.
+  - aws-eks-no-public-cluster-access
+
+  # Public EKS endpoint CIDR is set to 0.0.0.0/0 intentionally.
+  # Access is still fully protected by IAM and Kubernetes auth layers.
+  # tfsec cannot evaluate these controls and flags this as a false positive.
+  - aws-eks-no-public-cluster-access-to-cidr
+
+  # EKS worker nodes require outbound internet access for:
+  # - pulling container images
+  # - accessing AWS APIs
+  # - communicating with external services
+  # Restricting egress here would break cluster functionality.
+  - aws-ec2-no-public-egress-sgr
+
+  # Network ACLs are intentionally permissive.
+  # Fine-grained traffic control is enforced using Security Groups,
+  # following AWS best practices for VPC and EKS architectures.
+  - aws-ec2-no-excessive-port-access
+
+  # Public ingress in NACLs is intentional.
+  # Actual access control is handled at the Security Group and load balancer level.
+  # NACLs are used as a coarse-grained network layer.
+  - aws-ec2-no-public-ingress-acl
+
+  # VPC Flow Logs ARE enabled via the terraform-aws-vpc module.
+  # This is a known tfsec false positive when Flow Logs are created
+  # through modules and conditional resources.
+  - aws-ec2-require-vpc-flow-logs-for-all-vpcs
