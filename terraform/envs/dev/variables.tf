@@ -8,6 +8,11 @@ variable "name" {
   description = "Base name/prefix for all resources (VPC, EKS, etc.)."
 }
 
+variable "environment" {
+  type        = string
+  description = "Environment name (dev, stage, prod)"
+}
+
 variable "vpc_cidr" {
   type        = string
   description = "CIDR block for the VPC."
@@ -33,9 +38,16 @@ variable "cluster_version" {
   description = "Kubernetes version for the EKS cluster (e.g. 1.34)."
 }
 
-variable "node_instance_type" {
-  type        = string
-  description = "EC2 instance type for the managed node group."
+variable "node_instance_types" {
+  type        = list(string)
+  description = <<EOF
+Ordered list of EC2 instance types for EKS managed node groups.
+
+Instance type selection strategy:
+- First entry is the primary instance type
+- Subsequent entries act as capacity fallbacks
+- Ordering is intentional and environment-specific
+EOF
 }
 
 variable "node_desired_size" {
@@ -56,19 +68,28 @@ variable "node_max_size" {
 variable "node_disk_size" {
   type        = number
   description = "Disk size in GB for worker nodes."
-  default     = 20
+  default     = 30
+}
+
+variable "eks_public_access_cidrs" {
+  description = "CIDR blocks allowed to access the EKS public API endpoint"
+  type        = list(string)
+  default     = []
+}
+
+variable "cloudflare_api_token" {
+  description = "Cloudflare API token with DNS edit permissions"
+  type        = string
+  sensitive   = true
+}
+
+variable "cloudflare_zone_id" {
+  description = "Cloudflare Zone ID for the domain"
+  type        = string
 }
 
 variable "tags" {
+  description = "Additional / override tags"
   type        = map(string)
-  description = "Common tags applied to all resources."
   default     = {}
-}
-
-# IAM principal that receives EKS cluster-admin permissions.
-# Required by EKS module v21 because it manages access_entries.
-# Must be a valid IAM User or Role ARN.
-variable "admin_principal_arn" {
-  type        = string
-  description = "IAM principal with cluster-admin privileges."
 }

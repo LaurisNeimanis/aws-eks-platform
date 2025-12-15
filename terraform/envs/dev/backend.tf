@@ -1,10 +1,9 @@
-# ------------------------------------------------------------------------------
-# Terraform backend
-#
-# Demo setup:
-#   - uses the default local backend (terraform.tfstate in this folder)
-#
-# Production:
-#   - migrate to S3 + DynamoDB (remote state + state locking)
-#   - backend config is typically kept out of VCS or templated per environment
-# ------------------------------------------------------------------------------
+terraform {
+  backend "s3" {
+    bucket         = "foundation-terraform-state-ltn"
+    key            = "eks-platform/dev/terraform.tfstate"
+    region         = "eu-central-1"
+    dynamodb_table = "foundation-terraform-locks"
+    encrypt        = true
+  }
+}
