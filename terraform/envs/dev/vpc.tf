@@ -42,6 +42,13 @@ module "vpc" {
     "kubernetes.io/role/internal-elb"             = "1"
   }
 
+  # Enable VPC Flow Logs for network traffic visibility and troubleshooting
+  enable_flow_log                      = true
+  flow_log_destination_type            = "cloud-watch-logs"
+  create_flow_log_cloudwatch_log_group = true
+  create_flow_log_cloudwatch_iam_role  = true
+  flow_log_max_aggregation_interval    = 60  # 1-minute aggregation for near real-time analysis
+
   tags = local.common_tags
 }
 

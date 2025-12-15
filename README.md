@@ -158,8 +158,7 @@ flowchart TB
 > This is a high-level platform overview.  
 >  
 > A detailed infrastructure and networking diagram is available here:  
-> **diagrams/architecture.mmd**
-**[diagrams/architecture.mmd](diagrams/architecture.mmd)**
+> **[diagrams/architecture.mmd](diagrams/architecture.mmd)**
 
 ---
 
