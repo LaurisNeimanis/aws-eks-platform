@@ -79,13 +79,10 @@ No legacy components. No implicit defaults.
 
 ### In scope
 
-- AWS VPC and subnet topology
-- Internet Gateway, NAT, and routing
-- EKS control plane
-- Managed node groups
+- Environment-scoped AWS infrastructure (VPC, EKS, networking)
 - IAM roles and access model
-- ACM certificates
-- Cloudflare DNS automation
+- Global ACM certificate lifecycle
+- Cloudflare DNS automation for certificate validation
 - Terraform state consumption and locking
 
 ### Out of scope
@@ -109,24 +106,22 @@ Related repositories:
 
 ```text
 terraform/
-└── envs/
-    └── dev/
-        ├── backend.tf
-        ├── versions.tf
-        ├── providers.tf
-        ├── variables.tf
-        ├── terraform.tfvars.example
-        ├── locals.tf
-        ├── vpc.tf
-        ├── vpc-endpoints.tf
-        ├── eks.tf
-        ├── acm.tf
-        ├── acm-dns-cloudflare.tf
-        ├── acm-validation.tf
-        └── outputs.tf
+├── envs/
+│   └── dev/        # Environment-scoped infrastructure (VPC, EKS)
+│
+├── global/
+│   └── acm/        # Global ACM certificates + Cloudflare DNS validation
+│
+└── modules/
+    └── acm-cloudflare/  # Reusable ACM + Cloudflare integration module
 ```
 
-Each environment is **fully self-contained**, but relies on the **shared, pre-created Terraform backend**.
+Each environment is **logically self-contained** and independently deployable,
+while relying on a **shared, pre-created Terraform backend** for state storage and locking.
+
+- `envs/*` manage **environment-scoped infrastructure** (VPC, EKS, networking).
+- `global/*` manage **account-wide or shared resources** (ACM certificates, DNS automation).
+- `modules/*` contain **reusable, isolated Terraform building blocks**.
 
 ---
 
@@ -136,22 +131,28 @@ Each environment is **fully self-contained**, but relies on the **shared, pre-cr
 flowchart TB
   Operator["Operator / CI<br/>(Terraform)"]
 
+  subgraph TF["Terraform Scopes"]
+    Global["Global Scope<br/>(ACM + DNS)"]
+    Env["Env Scope<br/>(VPC + EKS)"]
+  end
+
   subgraph AWS["AWS Account"]
     VPC["VPC"]
-
-    EKS["Amazon EKS<br/>Control Plane"]
-    Nodes["EKS Managed Node Groups"]
+    EKS["Amazon EKS"]
     ACM["AWS ACM"]
-
-    VPC --> EKS
-    VPC --> Nodes
   end
 
   CF["Cloudflare DNS"]
   TFSTATE["Terraform Backend<br/>(S3 + DynamoDB)"]
 
   Operator --> TFSTATE
-  Operator --> EKS
+  Operator --> Global
+  Operator --> Env
+
+  Env --> VPC
+  Env --> EKS
+
+  Global --> ACM
   ACM --> CF
 ```
 

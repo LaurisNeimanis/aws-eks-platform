@@ -1,6 +1,11 @@
 flowchart TB
   Operator["Operator / CI<br/>(Terraform, kubectl)"]
 
+  subgraph TF["Terraform Scopes"]
+    Global["Global Scope<br/>(ACM + DNS)"]
+    Env["Environment Scope<br/>(VPC + EKS)"]
+  end
+
   subgraph AWS["AWS Account · eu-central-1"]
     subgraph VPC["VPC · 10.0.0.0/16"]
 
@@ -28,7 +33,11 @@ flowchart TB
   Internet["Public Internet"]
 
   Operator --> TFSTATE
-  Operator --> EKS
+  Operator --> Global
+  Operator --> Env
+
+  Env --> VPC
+  Env --> EKS
 
   Nodes --> EKS
   Pods --> Nodes
@@ -36,5 +45,7 @@ flowchart TB
   Pods --> NAT --> IGW --> Internet
   Pods --> S3EP --> S3
 
+  Global --> ACM
   ACM --> CF
+
   ALB --> Internet

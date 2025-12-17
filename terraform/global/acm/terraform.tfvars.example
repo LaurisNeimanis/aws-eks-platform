@@ -1,0 +1,22 @@
+# -----------------------------------------------------
+# Global ACM configuration (example)
+# -----------------------------------------------------
+
+# AWS region where ACM certificates are created
+aws_region = "eu-central-1"
+
+# Cloudflare DNS Zone ID for the primary domain
+# (Replace with your own zone ID)
+cloudflare_zone_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Cloudflare API token must be provided via environment variable:
+# export TF_VAR_cloudflare_api_token="your-cloudflare-api-token"
+
+# Primary domain for the ACM certificate (apex domain)
+primary_domain = "example.com"
+
+# Subject Alternative Names (SANs)
+# Wildcard domains are supported
+san_domains = [
+  "*.example.com",
+]
