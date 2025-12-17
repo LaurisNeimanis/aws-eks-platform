@@ -22,8 +22,3 @@ output "private_subnets" {
   description = "Private subnet IDs used by EKS"
   value       = module.vpc.private_subnets
 }
-
-output "acm_certificate_arn" {
-  description = "ACM certificate ARN (used by Traefik / LoadBalancers)"
-  value       = aws_acm_certificate.this.arn
-}
