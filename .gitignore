@@ -33,7 +33,6 @@ terraform.tfstate
 terraform.tfstate.*
 *.tfvars
 *.tfvars.json
-eks-traefik-deploy.md
 
 # ===========================================
 # Editors / IDEs
@@ -74,5 +73,3 @@ Thumbs.db
 # ===========================================
 *.tar
 **/.docker
-
-scripts
