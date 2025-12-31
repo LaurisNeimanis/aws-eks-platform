@@ -30,11 +30,19 @@ module "eks" {
 
   # Managed EKS addons
   addons = {
-    coredns    = {}
-    kube-proxy = {}
+    coredns        = {}
+    kube-proxy     = {}
+    metrics-server = {}
 
+    # VPC CNI prefix delegation: higher pod density, fewer ENIs, faster scheduling
     vpc-cni = {
       before_compute = true
+      configuration_values = jsonencode({
+        env = {
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+      })
     }
 
     eks-pod-identity-agent = {
