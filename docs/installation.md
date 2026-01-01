@@ -110,6 +110,18 @@ terraform init
 terraform apply
 ```
 
+> ⚠️ Domain scope clarification
+>
+> Cloudflare is used in this repository **only for ACM DNS validation**.
+>
+> This repository:
+> - creates DNS records required for **certificate validation only**
+> - does **not** manage application DNS records
+> - does **not** create A / CNAME records for ingress endpoints
+>
+> Application-level DNS (e.g. ExternalDNS, ingress hostnames)
+> is handled exclusively by higher-level GitOps repositories.
+
 ---
 
 ## 4. Environment scope: EKS (dev example)
