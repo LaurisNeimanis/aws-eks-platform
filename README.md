@@ -37,6 +37,45 @@ Everything **above the cluster** (platform services, workloads, GitOps logic) is
 
 ---
 
+## Minimum platform requirements
+
+This platform is production-aligned by design, but can be provisioned
+and validated in a minimal non-production setup.
+
+### Baseline (dev / non-production)
+
+The following baseline has been validated to successfully provision
+the infrastructure layer defined in this repository:
+
+- **EKS managed node groups**
+  - Instance types: `t3.micro` (primary), `t3a.micro` (capacity fallback)
+  - Node count: **2**
+- **Cluster capacity**
+  - Sufficient for core control-plane addons:
+    - CoreDNS
+    - VPC CNI
+    - metrics-server
+  - Suitable for infrastructure validation and GitOps bootstrap
+  - This baseline assumes no additional platform workloads beyond core addons.
+
+This baseline is intended for **development and validation purposes only**.
+
+### Notes and limitations
+
+- Smaller node counts or single-node clusters may fail during:
+  - addon scheduling
+  - rolling updates
+  - node replacement events
+- Production environments typically require:
+  - larger instance sizes
+  - multiple node groups
+  - higher fault tolerance and scaling policies
+
+Production sizing is intentionally environment-specific and
+explicitly out of scope for this repository.
+
+---
+
 ## Architectural Principles
 
 The infrastructure design prioritizes:
