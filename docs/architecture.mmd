@@ -1,0 +1,81 @@
+flowchart TB
+  Operator["Operator / CI<br/>(Terraform, kubectl)"]
+
+  %% -------------------------
+  %% Terraform scopes
+  %% -------------------------
+  subgraph TF["Terraform Scopes"]
+    Global["Global Scope<br/>(ACM + Cloudflare DNS)"]
+    Env["Environment Scope<br/>(VPC + EKS)"]
+  end
+
+  %% -------------------------
+  %% Terraform backend
+  %% -------------------------
+  TFSTATE_S3["Terraform State<br/>(S3)"]
+  TFLOCKS["Terraform Locks<br/>(DynamoDB)"]
+
+  Operator --> TFSTATE_S3
+  Operator --> TFLOCKS
+  Operator --> Global
+  Operator --> Env
+
+  %% -------------------------
+  %% AWS account
+  %% -------------------------
+  subgraph AWS["AWS Account · eu-central-1"]
+
+    %% VPC
+    subgraph VPC["VPC · 10.0.0.0/16"]
+
+      subgraph Public["Public Subnets"]
+        IGW["Internet Gateway"]
+        NAT["NAT Gateway<br/>(single, dev)"]
+      end
+
+      subgraph Private["Private Subnets"]
+        Nodes["EKS Managed Node Groups<br/>(Amazon Linux 2023)"]
+        Pods["Kubernetes Pods / Workloads"]
+      end
+
+      S3EP["S3 Gateway Endpoint"]
+    end
+
+    %% EKS control plane (AWS-managed)
+    EKS["Amazon EKS Control Plane<br/>(AWS-managed)"]
+
+    %% ACM
+    ACM["AWS ACM"]
+  end
+
+  %% -------------------------
+  %% External services
+  %% -------------------------
+  CF["Cloudflare DNS"]
+  S3["Amazon S3"]
+  Internet["Public Internet"]
+
+  %% -------------------------
+  %% Infra relationships
+  %% -------------------------
+  Env --> VPC
+  Env --> EKS
+
+  Nodes --> EKS
+  Pods --> Nodes
+
+  %% Egress paths
+  Private --> NAT
+  NAT --> IGW
+  IGW --> Internet
+
+  Pods --> S3EP --> S3
+
+  %% Load balancer (AWS-managed, subnet-attached)
+  ALB["AWS Load Balancer<br/>(ALB/NLB)"]
+  ALB --> Internet
+  ALB --> Nodes
+
+  %% Global ACM + DNS
+  Global --> ACM
+  ACM --> CF

@@ -10,6 +10,17 @@ This repository is the **authoritative source of truth for AWS infrastructure**.
 
 ---
 
+## Installation
+
+This repository does not include a quick-start guide.
+
+For the exact installation order, required configuration files,
+and Terraform execution steps, see:
+
+➡️ **[`install.md`](install.md)**
+
+---
+
 ## Purpose & Scope
 
 The goal of this repository is to deliver a **stable, minimal, and extensible EKS foundation**, not a demo cluster.
@@ -53,7 +64,7 @@ That repository is responsible for **one-time creation** of:
 - A DynamoDB table for state locking
 - Versioning, encryption, and public access blocking
 
-After the bootstrap step is completed once, **all Terraform environments** (global, dev, prod) automatically use this backend.
+The backend is shared across all Terraform scopes and environments by design.
 
 This repository **does not create or modify backend infrastructure** — it only consumes it.
 
@@ -69,7 +80,7 @@ This repository **does not create or modify backend infrastructure** — it only
 - **Cloudflare DNS** — automated ACM validation records  
 - **S3 Gateway VPC Endpoint**  
 - **S3 + DynamoDB** remote Terraform backend (bootstrapped externally)  
-- **Cost-optimized NAT** (single NAT for dev environments)
+- **Cost-optimized NAT** (single NAT for non-production environments)
 
 No legacy components. No implicit defaults.
 
@@ -136,6 +147,8 @@ flowchart TB
     Env["Env Scope<br/>(VPC + EKS)"]
   end
 
+  TFSTATE["Terraform Backend<br/>(State + Locking)"]
+
   subgraph AWS["AWS Account"]
     VPC["VPC"]
     EKS["Amazon EKS"]
@@ -143,7 +156,6 @@ flowchart TB
   end
 
   CF["Cloudflare DNS"]
-  TFSTATE["Terraform Backend<br/>(S3 + DynamoDB)"]
 
   Operator --> TFSTATE
   Operator --> Global
@@ -151,6 +163,7 @@ flowchart TB
 
   Env --> VPC
   Env --> EKS
+  EKS --> VPC
 
   Global --> ACM
   ACM --> CF
@@ -159,20 +172,19 @@ flowchart TB
 > This is a high-level platform overview.  
 >  
 > A detailed infrastructure and networking diagram is available here:  
-> **[diagrams/architecture.mmd](diagrams/architecture.mmd)**
+> **[docs/architecture.mmd](docs/architecture.mmd)**
 
 ---
 
 ## Terraform Workflow
 
-```bash
-cd terraform/envs/dev
-terraform init
-terraform plan
-terraform apply
-```
+Infrastructure is applied per-scope and per-environment
+using standard Terraform workflows.
 
-The backend is **already provisioned** and referenced in `backend.tf`.
+For the exact installation order, configuration files,
+and commands, see:
+
+**[`install.md`](install.md)**
 
 ---
 
@@ -181,7 +193,7 @@ The backend is **already provisioned** and referenced in `backend.tf`.
 This repository includes a **GitHub Actions–based Terraform CI pipeline** that enforces
 **formatting, linting, security scanning, and validation** on all Terraform changes.
 
-The CI pipeline is intentionally **non-deploying**.
+The CI pipeline is **not a delivery mechanism**.
 
 It exists solely to ensure that:
 
