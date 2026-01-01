@@ -10,6 +10,19 @@ It focuses solely on **what must be done, in what order, and where**.
 
 ---
 
+## 0. Repository context
+
+Clone the infrastructure repository locally:
+
+```bash
+git clone https://github.com/LaurisNeimanis/aws-eks-platform.git
+cd aws-eks-platform
+```
+
+All subsequent commands assume execution from the repository root.
+
+---
+
 ## 1. Prerequisites
 
 ### Local tooling
@@ -27,7 +40,7 @@ It focuses solely on **what must be done, in what order, and where**.
 
 ---
 
-## 2. Terraform backend (mandatory, one-time per account)
+## 2. External dependency — Terraform backend (mandatory, one-time per account)
 
 This repository **does not create** the Terraform backend.
 
