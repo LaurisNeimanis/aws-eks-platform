@@ -48,7 +48,9 @@ The following baseline has been validated to successfully provision
 the infrastructure layer defined in this repository:
 
 - **EKS managed node groups**
-  - Instance types: `t3.micro` (primary), `t3a.micro` (capacity fallback)
+  - Instance types: `t4g.micro` (AWS Graviton, ARM64)
+  - Architecture: **ARM64**
+  - AMI: **Amazon Linux 2023 (ARM)**
   - Node count: **2**
 - **Cluster capacity**
   - Sufficient for core control-plane addons:
@@ -56,7 +58,8 @@ the infrastructure layer defined in this repository:
     - VPC CNI
     - metrics-server
   - Suitable for infrastructure validation and GitOps bootstrap
-  - This baseline assumes no additional platform workloads beyond core addons.
+  - This baseline assumes no additional platform workloads beyond core addons
+    and requires all workloads and addons to support **linux/arm64**.
 
 This baseline is intended for **development and validation purposes only**.
 
@@ -113,7 +116,7 @@ This repository **does not create or modify backend infrastructure** — it only
 
 - **AWS VPC** — `terraform-aws-modules/vpc` v6  
 - **Amazon EKS** — `terraform-aws-modules/eks` v21  
-- **EKS Managed Node Groups** (Amazon Linux 2023)  
+- **EKS Managed Node Groups** (Amazon Linux 2023 · ARM64 / AWS Graviton)
 - **EKS Access API** (API-only authentication mode)  
 - **AWS ACM** — DNS-validated certificates  
 - **Cloudflare DNS** — automated ACM validation records  
