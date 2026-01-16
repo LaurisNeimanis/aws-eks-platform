@@ -2,21 +2,19 @@ flowchart TB
   Operator["Operator / CI<br/>(Terraform, kubectl)"]
 
   %% -------------------------
-  %% Terraform scopes
+  %% Terraform scopes (isolated states)
   %% -------------------------
-  subgraph TF["Terraform Scopes"]
+  subgraph TF["Terraform Scopes (isolated states)"]
     Global["Global Scope<br/>(ACM + Cloudflare DNS)"]
     Env["Environment Scope<br/>(VPC + EKS)"]
   end
 
   %% -------------------------
-  %% Terraform backend
+  %% Terraform state backend
   %% -------------------------
-  TFSTATE_S3["Terraform State<br/>(S3)"]
-  TFLOCKS["Terraform Locks<br/>(DynamoDB)"]
+  TFSTATE_S3["Terraform State<br/>(S3 + Native Locking)"]
 
-  Operator --> TFSTATE_S3
-  Operator --> TFLOCKS
+  Operator -->|"read / write state + lock"| TFSTATE_S3
   Operator --> Global
   Operator --> Env
 
@@ -72,7 +70,7 @@ flowchart TB
   Pods --> S3EP --> S3
 
   %% Load balancer (AWS-managed, subnet-attached)
-  ALB["AWS Load Balancer<br/>(ALB/NLB)"]
+  ALB["AWS Load Balancer<br/>(ALB / NLB)"]
   ALB --> Internet
   ALB --> Nodes
 
