@@ -36,7 +36,7 @@ All subsequent commands assume execution from the repository root.
 * An AWS account with permissions for:
 
   * EKS, EC2, VPC, IAM, KMS, CloudWatch
-  * S3 + DynamoDB (Terraform backend)
+  * S3 (Terraform remote state with native locking)
 
 ---
 
@@ -51,11 +51,12 @@ dedicated repository:
 https://github.com/LaurisNeimanis/aws-tf-backend-bootstrap
 
 That repository must be applied **once per AWS account** and creates:
-- S3 bucket for Terraform state
-- DynamoDB table for state locking
+- S3 bucket for Terraform remote state
+- Native S3 state locking (no DynamoDB)
 
 After that:
-- This repository only consumes the backend
+- This repository only consumes the pre-existing S3 backend
+- State locking is handled natively by S3
 
 ### Backend configuration (required)
 
@@ -68,8 +69,8 @@ Update the backend definition in:
 
 with:
 - your S3 bucket name
-- your DynamoDB lock table name
-- correct region and state key
+- correct region
+- unique state key per scope/environment
 
 before running `terraform init`.
 

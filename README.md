@@ -95,15 +95,15 @@ The result is an infrastructure layer that is **boring, predictable, and safe** 
 
 ## Terraform Backend Bootstrap
 
-This infrastructure uses a **pre-bootstrapped, shared Terraform backend** based on **S3 + DynamoDB**, created and managed via a **dedicated bootstrap repository**.
+This infrastructure uses a **pre-bootstrapped, shared Terraform backend** based on **Amazon S3 with native locking**, created and managed via a **dedicated bootstrap repository**.
 
 **Terraform backend bootstrap (authoritative):**  
 https://github.com/LaurisNeimanis/aws-tf-backend-bootstrap
 
 That repository is responsible for **one-time creation** of:
 
-- A globally unique S3 bucket for Terraform state
-- A DynamoDB table for state locking
+- A globally unique S3 bucket for Terraform remote state
+- Native S3 state locking (`.tflock` objects)
 - Versioning, encryption, and public access blocking
 
 The backend is shared across all Terraform scopes and environments by design.
@@ -121,7 +121,7 @@ This repository **does not create or modify backend infrastructure** — it only
 - **AWS ACM** — DNS-validated certificates  
 - **Cloudflare DNS** — automated ACM validation records  
 - **S3 Gateway VPC Endpoint**  
-- **S3 + DynamoDB** remote Terraform backend (bootstrapped externally)  
+- **S3 remote Terraform backend with native locking** (bootstrapped externally)
 - **Cost-optimized NAT** (single NAT for non-production environments)
 
 No legacy components. No implicit defaults.
@@ -136,11 +136,11 @@ No legacy components. No implicit defaults.
 - IAM roles and access model
 - Global ACM certificate lifecycle
 - Cloudflare DNS automation for certificate validation
-- Terraform state consumption and locking
+- Terraform state consumption (S3 backend with native locking)
 
 ### Out of scope
 
-- Terraform backend creation (S3, DynamoDB)
+- Terraform backend creation (S3 state bucket)
 - Kubernetes workloads
 - GitOps tooling (ArgoCD, ApplicationSets)
 - Ingress controllers
@@ -189,7 +189,7 @@ flowchart TB
     Env["Env Scope<br/>(VPC + EKS)"]
   end
 
-  TFSTATE["Terraform Backend<br/>(State + Locking)"]
+  TFSTATE["Terraform State Backend<br/>(S3 + Native Locking)"]
 
   subgraph AWS["AWS Account"]
     VPC["VPC"]
@@ -279,7 +279,7 @@ This repository provides a **clean, production-aligned EKS infrastructure founda
 - IAM-native, API-only authentication
 - Explicit networking and security boundaries
 - Fully automated ACM + Cloudflare integration
-- Shared, pre-bootstrapped Terraform backend
+- Shared, pre-bootstrapped Terraform backend using S3 native locking
 - Deterministic Terraform workflows
 - Clear separation from GitOps and workload concerns
 
