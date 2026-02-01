@@ -17,7 +17,7 @@ This repository does not include a quick-start guide.
 For the exact installation order, required configuration files,
 and Terraform execution steps, see:
 
-➡️ **[`install.md`](install.md)**
+➡️ **[`docs/installation.md`](docs/installation.md)**
 
 ---
 
@@ -226,7 +226,7 @@ using standard Terraform workflows.
 For the exact installation order, configuration files,
 and commands, see:
 
-**[`install.md`](install.md)**
+**[`docs/installation.md`](docs/installation.md)**
 
 ---
 
