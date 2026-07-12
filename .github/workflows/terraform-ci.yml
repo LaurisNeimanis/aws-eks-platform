@@ -24,7 +24,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: terraform/envs/dev
-        run: terraform init -backend=false -input=false
+        run: terraform init -backend=false -input=false -lockfile=readonly
 
       - name: Terraform Format (repo-wide)
         run: terraform fmt -check -recursive terraform/
